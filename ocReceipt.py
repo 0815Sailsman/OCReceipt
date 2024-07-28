@@ -20,12 +20,18 @@ def main():
 
     rows_to_color = []
     # check every row by itself as a starting point
+    early_exits = 0
     for row_index in range(0, img.shape[1]):
         result = algo(row_index, img)
+        if result == -1:
+            print("early exit :)")
+            early_exits += 1
+            continue
         if result is None:
             continue
         rows_to_color.append(result)
 
+    print(str(early_exits) + " early exits")
     color_img_by_instructions(img, rows_to_color)
 
     # display(img2)
