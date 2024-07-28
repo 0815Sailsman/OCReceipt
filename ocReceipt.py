@@ -5,56 +5,30 @@ import math
 def main():
     # Load img
     img = cv.imread("./receipt.jpg")
-    #display(img)
 
-    img2 = img
-    print(img.shape)
-    print(img2.shape)
-    iter1 = []
-    for row in range(0,img2.shape[1]):
-        for col in range(0,img2.shape[0]):
-            val = img2[col,row,2] * 0.2126 + img2[col, row, 1] * 0.7152 + img2[col, row, 0] * 0.0722
-            if (val < 100):
-                img2[col,row]=np.array([0, 0, 0])
+    # Contrast preprocessing
+    for row in range(0,img.shape[1]):
+        for col in range(0,img.shape[0]):
+            perceived_brightness = calc_perceived_brightness_of_bgr_pixel(img[col, row])
+            if (perceived_brightness < 100):
+                img[col,row]=np.array([0, 0, 0])
             else:
-                img2[col,row]=np.array([255, 255, 255])
+                img[col,row]=np.array([255, 255, 255])
 
     #cv.imwrite('./contrasted.jpg', rotate(img2, 90))
 
     rows_to_color = []
-
     # check every row by itself as a starting point
-    for row_index in range(0, img2.shape[1]):
-        result = algo(row_index, img2)
+    for row_index in range(0, img.shape[1]):
+        result = algo(row_index, img)
         if result is None:
             continue
         rows_to_color.append(result)
 
-    for obj in rows_to_color:
-        start = obj[0]
-        instructions = obj[1]
-        print(obj[0])
-        print(len(instructions))
-        offset = 0
-        counter = 0
-        # For every 5 pixel wide column
-        # for col_block in range(0, (img2.shape[0] // 5 - 1)):
-        for col_block in range(0, img2.shape[0] - 1):
-            # For every pixel in that block
-#            for i in range(5):
-            for i in range(1):
-                # Break if out of bound
-                if start + offset >= img2.shape[1]:
-                    continue
-
-                #img2[col_block * 5 + i, start + offset] = np.array([0, 0, 255])
-                img2[col_block, start + offset] = np.array([0, 0, 255])
-            if counter < len(instructions):
-                offset += instructions[counter]
-                counter += 1
+    color_img_by_instructions(img, rows_to_color)
 
     # display(img2)
-    cv.imwrite('./line-contrast.png', rotate(img2, 90))
+    cv.imwrite('./line-contrast.png', rotate(img, 90))
     
     # Preprocess img for row / item detection
     #contrast(img)
@@ -99,7 +73,34 @@ def algo(row_index, img):
         return(row_index, [instruction[0] for instruction in row_steps])
     return None
 
+def color_img_by_instructions(img2, rows_to_color):
+    for obj in rows_to_color:
+        start = obj[0]
+        instructions = obj[1]
+        print(obj[0])
+        print(len(instructions))
+        offset = 0
+        counter = 0
+        # For every 5 pixel wide column
+        # for col_block in range(0, (img2.shape[0] // 5 - 1)):
+        for col_block in range(0, img2.shape[0] - 1):
+            # For every pixel in that block
+#            for i in range(5):
+            for i in range(1):
+                # Break if out of bound
+                if start + offset >= img2.shape[1]:
+                    continue
 
+                #img2[col_block * 5 + i, start + offset] = np.array([0, 0, 255])
+                img2[col_block, start + offset] = np.array([0, 0, 255])
+            if counter < len(instructions):
+                offset += instructions[counter]
+                counter += 1
+
+
+
+def calc_perceived_brightness_of_bgr_pixel(pixel):
+    return pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722
 
 def contrast(img):
     lab= cv.cvtColor(img, cv.COLOR_BGR2LAB)
